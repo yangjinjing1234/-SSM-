@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.bdqn.dao.UserDao">
+	<!-- 当数据库中的字段信息与对象的属性不一致时需要通过resultMap来映射 -->
+	<resultMap type="User" id="userList">
+		<!-- <result property="id" column="id" /> <result property="userCode" column="userCode" 
+			/> <result property="userName" column="userName" /> <result property="phone" 
+			column="phone" /> <result property="birthday" column="birthday" /> <result 
+			property="gender" column="gender" /> <result property="userRole" column="userRole" 
+			/> -->
+		<id property="id" column="id" />
+		<result property="age" column="age" />
+		<result property="userRoleName" column="userRoleName" />
+	</resultMap>
+
+	<select id="findByUid" parameterType="int" resultType="User">
+		SELECT id,
+		userName,userPassword,userCode, gender, birthday, phone, address, userRole
+		FROM
+		smbms_user WHERE id = #{uid}
+	</select>
+
+	<!-- 分页查询对应集合 -->
+	<select id="findByConditions" resultMap="userList">
+		SELECT U.id, userCode, userName, gender,
+		FLOOR(DATEDIFF(NOW(),birthday)/365) AS age, phone,
+		roleName AS
+		userRoleName
+		FROM
+		smbms_user U INNER JOIN smbms_role R
+		ON U.userRole =
+		R.id
+		<where>
+			<if test="userName!=null and userName!=''">
+				AND userName LIKE CONCAT('%',#{userName},'%')
+			</if>
+			<if test="roleId!=null and roleId!=0">
+				AND userRole = #{roleId}
+			</if>
+		</where>
+		LIMIT #{from}, #{pageSize}
+
+	</select>
+	<!-- 分页查询对应数量 -->
+	<select id="getTotalCount" resultType="int">
+     <![CDATA[]]>
+		SELECT COUNT(U.id)
+		FROM
+		smbms_user U INNER JOIN smbms_role R
+		ON
+		U.userRole = R.id
+		<where>
+			<if test="userName!=null and userName!=''">
+				AND userName LIKE CONCAT('%',#{userName},'%')
+			</if>
+			<if test="roleId!=null and roleId!=0">
+				AND userRole = #{roleId}
+			</if>
+		</where>
+	</select>
+
+	<select id="findByCode" parameterType="string" resultType="User">
+		SELECT * FROM smbms_user where userCode = #{userCode}
+	</select>
+
+	<select id="findByName" parameterType="string" resultType="User">
+		SELECT * FROM smbms_user where userName like CONCAT ('%',#{name},'%')
+	</select>
+
+	<!-- 新增 -->
+	<insert id="addUser" parameterType="User">
+		INSERT INTO
+		smbms_user(userCode,userName,userPassword,gender,birthday,
+		phone,
+		address, userRole, createdBy, creationDate
+
+		)
+		VALUES(#{userCode},#{userName},#{userPassword},#{gender},
+		#{birthday},#{phone},#{address},#{userRole},#{createdBy},NOW()
+		)
+	</insert>
+
+	<update id="updateUser" parameterType="User">
+		UPDATE smbms_user
+		<trim prefix="set" suffix="WHERE id = #{id}" suffixOverrides=",">
+			<if test="userCode!=null">
+				userCode =#{userCode},
+			</if>
+			<if test="userName!=null">
+				userName=#{userName},
+			</if>
+			<if test="userPassword!=null">
+				userPassword =#{userPassword},
+			</if>
+			<if test="createdBy!=null">
+				createdBy = #{createdBy},
+			</if>
+			<if test="creationDate!=null">
+				creationDate = #{creationDate},
+			</if>
+			<if test="gender!=null">
+				gender =#{gender},
+			</if>
+			<if test="address!=null">
+				address = #{address},
+			</if>
+			<if test="birthday!=null">
+				birthday =#{birthday},
+			</if>
+			<if test="modifyBy!=null">
+				modifyBy = #{modifyBy},
+			</if>
+			<if test="modifyDate!=null">
+				modifyDate =#{modifyDate},
+			</if>
+			<if test="phone!=null">
+				phone =#{phone},
+			</if>
+			<if test="userRole!=null">
+				userRole=#{userRole},
+			</if>
+		</trim>
+
+	</update>
+	<!-- 查询用户列表(参数：对象入参) -->
+	<select id="getUserList" resultMap="userList" parameterType="User">
+    <![CDATA[
+    select u.*,r.roleName from smbms_user u,smbms_role r
+        where u.userName like CONCAT ('%',#{userName},'%')
+        and u.userRole <> #{userRole} and u.userRole = r.id
+    ]]>
+	</select>
+	<delete id="delUserById" parameterType="int">
+		DELETE FROM
+		smbms.smbms_user WHERE id = #{id}
+	</delete>
+
+
+
+
+</mapper>
